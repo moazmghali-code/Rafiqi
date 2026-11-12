@@ -21,25 +21,19 @@ jobs:
           mkdir -p www
           cp index.html www/
           cp adhan*.mp3 www/ 2>/dev/null || true
-          curl -sSfL https://api.alquran.cloud/v1/quran/quran-uthmani -o www/quran.json || echo "Quran text will load online instead"
+          curl -sSfL https://api.alquran.cloud/v1/quran/quran-uthmani -o www/quran.json || echo "online fallback"
       - run: npx cap add android
-      - name: Copy adhan sounds for notifications
+      - name: Copy adhan sounds
         run: |
           mkdir -p android/app/src/main/res/raw
           cp adhan*.mp3 android/app/src/main/res/raw/ 2>/dev/null || true
       - name: Apply app icon
         run: |
-          [ -f icon.png ] || exit 0
-          pip install pillow
-          rm -rf android/app/src/main/res/mipmap-anydpi-v26
-          python3 - <<'PY'
-          from PIL import Image
-          im = Image.open('icon.png').convert('RGBA')
-          for d, s in {'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}.items():
-              r = im.resize((s, s), Image.LANCZOS)
-              for n in ('ic_launcher.png', 'ic_launcher_round.png'):
-                  r.save('android/app/src/main/res/mipmap-' + d + '/' + n)
-          PY
+          if [ -f icon.png ]; then
+            pip install pillow
+            rm -rf android/app/src/main/res/mipmap-anydpi-v26
+            python3 -c "from PIL import Image; im=Image.open('icon.png').convert('RGBA'); [im.resize((s,s)).save('android/app/src/main/res/mipmap-%s/%s' % (d,n)) for d,s in {'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}.items() for n in ('ic_launcher.png','ic_launcher_round.png')]"
+          fi
       - run: npx cap sync android
       - name: Build debug APK
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
