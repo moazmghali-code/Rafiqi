@@ -52,9 +52,10 @@ select{width:100%;margin:6px 0}button.p{background:var(--g);color:#000;border:0;
 </section>
 <section id="adhan" hidden>
  <div class="card"><label><input type="checkbox" id="on"> تفعيل الأذان عند دخول الوقت</label></div>
- <label>المؤذن</label><select id="mz"><option value="1">المؤذن الأول (adhan1.mp3)</option><option value="2">المؤذن الثاني (adhan2.mp3)</option><option value="3">المؤذن الثالث (adhan3.mp3)</option></select>
- <div class="c"><button class="p" id="pre">تجربة الأذان</button><button id="stp">إيقاف</button></div>
+ <div class="card"><small>ملف الأذان العام: adhan.mp3 (كل الصلوات)<br>ملف أذان الفجر: adhan_fajr.mp3</small></div>
+ <div class="c"><button class="p" id="pre">تجربة الأذان</button><button class="p" id="pf">تجربة أذان الفجر</button><button id="stp">إيقاف</button></div>
  <p class="c"><small>الحساب: القاهرة، الهيئة المصرية العامة للمساحة (الفجر ١٩٫٥° والعشاء ١٧٫٥°). افتح التطبيق مرة في الأسبوع لتجديد الجدولة.</small></p>
+ <div class="card c"><p>رفيقي</p><small>رفيقك في طريق الخير</small><br><small>صُنع هذا التطبيق بواسطة معاذ محمد متولي</small></div>
 </section>
 <section id="azkar" hidden>
  <div class="c"><button class="p" id="am" onclick="az(0)">أذكار الصباح</button><button id="ae" onclick="az(1)">أذكار المساء</button></div><div id="azl"></div>
@@ -101,17 +102,17 @@ function tick(){
  $('#nxt').textContent='صلاة '+NM[n.k];$('#cd').textContent=N(Math.floor(r/36e5))+':'+N(Math.floor(r/6e4)%60)+':'+N(Math.floor(r/1e3)%60);
  $('#ring').style.setProperty('--p',((now-p.t)/(n.t-p.t)*100)+'%');$('#hij').textContent=hf.format(now);
  const t0=day(0);$('#times').innerHTML=['fajr','sunrise','dhuhr','asr','maghrib','isha'].map(k=>`<div class="row${k==n.k&&n.i==0||k==n.k&&n.i==1&&k=='fajr'?' on':''}"><span>${NM[k]}</span><span>${tf.format(t0[k])}</span></div>`).join('');
- for(const k of K5){const t=t0[k].getTime();if(now-t>=0&&now-t<6000&&fired!=t){fired=t;if(LS.g('on','1')=='1')playAdhan()}}}
+ for(const k of K5){const t=t0[k].getTime();if(now-t>=0&&now-t<6000&&fired!=t){fired=t;if(LS.g('on','1')=='1')playAdhan(k)}}}
 /* ===== الأذان ===== */
 const ad=new Audio();let adOn=false;
-function playAdhan(){ad.src='adhan'+LS.g('mz','1')+'.mp3';ad.play().catch(()=>alert('ملف الأذان غير موجود. أضف adhan1.mp3 إلى المستودع.'))}
+function playAdhan(k){ad.src=k=='fajr'?'adhan_fajr.mp3':'adhan.mp3';ad.play().catch(()=>alert('ملف الأذان غير موجود داخل التطبيق.'))}
 async function schedule(){
  const LN=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications;if(!LN)return;
  try{const p=await LN.requestPermissions();if(p.display!=='granted')return;
- for(const i of[1,2,3])await LN.createChannel({id:'adhan'+i,name:'الأذان '+i,importance:5,sound:'adhan'+i+'.mp3',vibration:true});
+ for(const c of[['adhan_gen','الأذان','adhan.mp3'],['adhan_fajr','أذان الفجر','adhan_fajr.mp3']])await LN.createChannel({id:c[0],name:c[1],importance:5,sound:c[2],vibration:true});
  const pd=await LN.getPending();if(pd.notifications.length)await LN.cancel(pd);if(LS.g('on','1')!='1')return;
  const L=[],now=new Date();let id=1;
- for(let i=0;i<7;i++){const t=day(i);K5.forEach(k=>{if(t[k]>now)L.push({id:id++,title:'حان الآن موعد صلاة '+NM[k],body:'رفيقك في طريق الخير',channelId:'adhan'+LS.g('mz','1'),schedule:{at:t[k],allowWhileIdle:true}})})}
+ for(let i=0;i<7;i++){const t=day(i);K5.forEach(k=>{if(t[k]>now)L.push({id:id++,title:'حان الآن موعد صلاة '+NM[k],body:'رفيقك في طريق الخير',channelId:k=='fajr'?'adhan_fajr':'adhan_gen',schedule:{at:t[k],allowWhileIdle:true}})})}
  await LN.schedule({notifications:L})}catch(e){}}
 /* ===== البيانات ===== */
 const SUR='الفاتحة،البقرة،آل عمران،النساء،المائدة،الأنعام،الأعراف،الأنفال،التوبة،يونس،هود،يوسف،الرعد،إبراهيم،الحجر،النحل،الإسراء،الكهف،مريم،طه،الأنبياء،الحج،المؤمنون،النور،الفرقان،الشعراء،النمل،القصص،العنكبوت،الروم،لقمان،السجدة،الأحزاب،سبأ،فاطر،يس،الصافات،ص،الزمر،غافر،فصلت،الشورى،الزخرف،الدخان،الجاثية،الأحقاف،محمد،الفتح،الحجرات،ق،الذاريات،الطور،النجم،القمر،الرحمن،الواقعة،الحديد،المجادلة،الحشر،الممتحنة،الصف،الجمعة،المنافقون،التغابن،الطلاق،التحريم،الملك،القلم،الحاقة،المعارج،نوح،الجن،المزمل،المدثر،القيامة،الإنسان،المرسلات،النبأ،النازعات،عبس،التكوير،الانفطار،المطففين،الانشقاق،البروج،الطارق،الأعلى،الغاشية،الفجر،البلد،الشمس،الليل،الضحى،الشرح،التين،العلق،القدر،البينة،الزلزلة،العاديات،القارعة،التكاثر،العصر،الهمزة،الفيل،قريش،الماعون،الكوثر،الكافرون،النصر،المسد،الإخلاص،الفلق،الناس'.split('،');
@@ -121,7 +122,7 @@ const HD=[['إنما الأعمال بالنيات، وإنما لكل امرئ 
 const AZ=[['اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ',1],['قُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ',3],['قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۝ مِن شَرِّ مَا خَلَقَ ۝ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِن شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ۝ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ',3],['قُلْ أَعُوذُ بِرَبِّ النَّاسِ ۝ مَلِكِ النَّاسِ ۝ إِلَٰهِ النَّاسِ ۝ مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ۝ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ۝ مِنَ الْجِنَّةِ وَالنَّاسِ',3],[['أصبحنا وأصبح الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير. ربّ أسألك خير ما في هذا اليوم وخير ما بعده، وأعوذ بك من شرّ ما في هذا اليوم وشرّ ما بعده.','أمسينا وأمسى الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير. ربّ أسألك خير ما في هذه الليلة وخير ما بعدها، وأعوذ بك من شرّ ما في هذه الليلة وشرّ ما بعدها.'],1],[['اللهم بك أصبحنا، وبك أمسينا، وبك نحيا، وبك نموت، وإليك النشور.','اللهم بك أمسينا، وبك أصبحنا، وبك نحيا، وبك نموت، وإليك المصير.'],1],['اللهم أنت ربي لا إله إلا أنت، خلقتني وأنا عبدك، وأنا على عهدك ووعدك ما استطعت، أعوذ بك من شرّ ما صنعت، أبوء لك بنعمتك عليّ، وأبوء بذنبي فاغفر لي فإنه لا يغفر الذنوب إلا أنت. (سيد الاستغفار)',1],['بسم الله الذي لا يضرّ مع اسمه شيء في الأرض ولا في السماء وهو السميع العليم.',3],['رضيت بالله ربًّا، وبالإسلام دينًا، وبمحمد ﷺ نبيًّا.',3],['حسبيَ الله لا إله إلا هو، عليه توكلت وهو ربّ العرش العظيم.',7],['أعوذ بكلمات الله التامات من شرّ ما خلق.',3],['سبحان الله وبحمده.',100]];
 const ASMA='الرحمن،الرحيم،الملك،القدوس،السلام،المؤمن،المهيمن،العزيز،الجبار،المتكبر،الخالق،البارئ،المصور،الغفار،القهار،الوهاب،الرزاق،الفتاح،العليم،القابض،الباسط،الخافض،الرافع،المعز،المذل،السميع،البصير،الحكم،العدل،اللطيف،الخبير،الحليم،العظيم،الغفور،الشكور،العلي،الكبير،الحفيظ،المقيت،الحسيب،الجليل،الكريم،الرقيب،المجيب،الواسع،الحكيم،الودود،المجيد،الباعث،الشهيد،الحق،الوكيل،القوي،المتين،الولي،الحميد،المحصي،المبدئ،المعيد،المحيي،المميت،الحي،القيوم،الواجد،الماجد،الواحد،الأحد،الصمد،القادر،المقتدر،المقدم،المؤخر،الأول،الآخر،الظاهر،الباطن،الوالي،المتعالي،البر،التواب،المنتقم،العفو،الرؤوف،مالك الملك،ذو الجلال والإكرام،المقسط،الجامع،الغني،المغني،المانع،الضار،النافع،النور،الهادي،البديع،الباقي،الوارث،الرشيد،الصبور'.split('،');
 /* ===== التنقل ===== */
-const PG={mushaf:['المصحف','قراءة الآيات'],quran:['الاستماع للقرآن','تلاوة بصوت القارئ'],azkar:['الأذكار','صباح ومساء'],hadith:['الأحاديث','٢٠ حديثًا موثقًا'],tasbeeh:['السبحة','عدّاد إلكتروني'],qibla:['القبلة','بوصلة الهاتف'],asma:['أسماء الله الحسنى','٩٩ اسمًا'],adhan:['الأذان','المؤذن والتنبيه']};
+const PG={mushaf:['المصحف','قراءة الآيات'],quran:['الاستماع للقرآن','تلاوة بصوت القارئ'],azkar:['الأذكار','صباح ومساء'],hadith:['الأحاديث','٢٠ حديثًا موثقًا'],tasbeeh:['السبحة','عدّاد إلكتروني'],qibla:['القبلة','بوصلة الهاتف'],asma:['أسماء الله الحسنى','٩٩ اسمًا'],adhan:['الإعدادات','الأذان وعن التطبيق']};
 $('#tiles').innerHTML=Object.entries(PG).map(([k,v])=>`<button class="tile" onclick="go('${k}')">${v[0]}<small>${v[1]}</small></button>`).join('');
 function go(id){document.querySelectorAll('section').forEach(s=>s.hidden=s.id!=id);$('#back').hidden=id=='home';$('#ttl').textContent=id=='home'?'رفيقي':PG[id][0];if(id!='qibla')stopQ();if(id=='mushaf')showMus();scrollTo(0,0)}
 /* ===== القرآن ===== */
@@ -138,9 +139,9 @@ if('mediaSession' in navigator){const m=navigator.mediaSession;m.setActionHandle
 fillRec();
 fetch('https://mp3quran.net/api/v3/reciters?language=ar').then(r=>r.json()).then(j=>{const L=[];j.reciters.forEach(r=>r.moshaf.forEach(m=>L.push({n:r.name+(r.moshaf.length>1?' — '+m.name:''),s:m.server.replace(/\/?$/,'/'),l:m.surah_list})));if(L.length>10){RECS=L;fillRec()}}).catch(()=>{});
 /* ===== الأذان ===== */
-$('#on').checked=LS.g('on','1')=='1';$('#mz').value=LS.g('mz','1');
-$('#on').onchange=e=>{LS.s('on',e.target.checked?1:0);schedule()};$('#mz').onchange=e=>{LS.s('mz',e.target.value);schedule()};
-$('#pre').onclick=playAdhan;$('#stp').onclick=()=>ad.pause();
+$('#on').checked=LS.g('on','1')=='1';
+$('#on').onchange=e=>{LS.s('on',e.target.checked?1:0);schedule()};
+$('#pre').onclick=()=>playAdhan('x');$('#pf').onclick=()=>playAdhan('fajr');$('#stp').onclick=()=>ad.pause();
 /* ===== الأذكار والأحاديث والأسماء ===== */
 function az(e){$('#am').className=e?'':'p';$('#ae').className=e?'p':'';$('#azl').innerHTML=AZ.map(([t,n])=>{const x=Array.isArray(t)?t[e]:t;return`<div class="card" data-n="${n}" onclick="dz(this)"><p>${x}</p><small>اضغط للعدّ — المتبقي: <b>${N(n)}</b></small></div>`}).join('')}
 function dz(c){let n=+c.dataset.n;if(n>0){c.dataset.n=--n;c.querySelector('b').textContent=N(n);if(!n){c.style.opacity=.45;navigator.vibrate&&navigator.vibrate(60)}}}
