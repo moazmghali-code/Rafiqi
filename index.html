@@ -29,7 +29,7 @@ select{width:100%;margin:6px 0}button.p{background:var(--g);color:#000;border:0;
 .dial.ok{box-shadow:0 0 24px var(--g)}
 .tas{width:230px;height:230px;border-radius:50%;margin:20px auto;display:grid;place-items:center;font-size:64px;background:radial-gradient(#1b1608,#000);border:2px solid var(--g);color:var(--g);user-select:none}
 .c{text-align:center}.c>*{margin:6px}
-</style></head><body>
+.mus{font-size:var(--fz,28px);line-height:2.5;text-align:justify;font-family:"Amiri","Noto Naskh Arabic","Droid Arabic Naskh",serif}.an{color:var(--g);font-size:.65em}.bsm{text-align:center;color:var(--g);margin:0 0 10px}</style></head><body>
 <header><button id="back" hidden onclick="go('home')">رجوع</button><h1 id="ttl">رفيقي</h1><small>رفيقك في طريق الخير</small></header>
 <main>
 <section id="home">
@@ -43,6 +43,12 @@ select{width:100%;margin:6px 0}button.p{background:var(--g);color:#000;border:0;
  <audio id="au" controls style="width:100%;margin:12px 0"></audio>
  <div class="c"><button id="pv">السابقة</button><button class="p" id="pl">تشغيل</button><button id="nx">التالية</button></div>
  <p class="c"><small id="qs"></small></p>
+</section>
+<section id="mushaf" hidden>
+ <select id="ms"></select>
+ <div class="c"><button id="fm">A−</button><button id="fp">A+</button></div>
+ <div class="card mus" id="mb"></div>
+ <div class="c"><button id="mp">السورة السابقة</button><button class="p" id="mn">السورة التالية</button></div>
 </section>
 <section id="adhan" hidden>
  <div class="card"><label><input type="checkbox" id="on"> تفعيل الأذان عند دخول الوقت</label></div>
@@ -115,9 +121,9 @@ const HD=[['إنما الأعمال بالنيات، وإنما لكل امرئ 
 const AZ=[['اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَّهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَن ذَا الَّذِي يَشْفَعُ عِندَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِّنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ',1],['قُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ',3],['قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۝ مِن شَرِّ مَا خَلَقَ ۝ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِن شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ۝ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ',3],['قُلْ أَعُوذُ بِرَبِّ النَّاسِ ۝ مَلِكِ النَّاسِ ۝ إِلَٰهِ النَّاسِ ۝ مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ۝ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ۝ مِنَ الْجِنَّةِ وَالنَّاسِ',3],[['أصبحنا وأصبح الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير. ربّ أسألك خير ما في هذا اليوم وخير ما بعده، وأعوذ بك من شرّ ما في هذا اليوم وشرّ ما بعده.','أمسينا وأمسى الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير. ربّ أسألك خير ما في هذه الليلة وخير ما بعدها، وأعوذ بك من شرّ ما في هذه الليلة وشرّ ما بعدها.'],1],[['اللهم بك أصبحنا، وبك أمسينا، وبك نحيا، وبك نموت، وإليك النشور.','اللهم بك أمسينا، وبك أصبحنا، وبك نحيا، وبك نموت، وإليك المصير.'],1],['اللهم أنت ربي لا إله إلا أنت، خلقتني وأنا عبدك، وأنا على عهدك ووعدك ما استطعت، أعوذ بك من شرّ ما صنعت، أبوء لك بنعمتك عليّ، وأبوء بذنبي فاغفر لي فإنه لا يغفر الذنوب إلا أنت. (سيد الاستغفار)',1],['بسم الله الذي لا يضرّ مع اسمه شيء في الأرض ولا في السماء وهو السميع العليم.',3],['رضيت بالله ربًّا، وبالإسلام دينًا، وبمحمد ﷺ نبيًّا.',3],['حسبيَ الله لا إله إلا هو، عليه توكلت وهو ربّ العرش العظيم.',7],['أعوذ بكلمات الله التامات من شرّ ما خلق.',3],['سبحان الله وبحمده.',100]];
 const ASMA='الرحمن،الرحيم،الملك،القدوس،السلام،المؤمن،المهيمن،العزيز،الجبار،المتكبر،الخالق،البارئ،المصور،الغفار،القهار،الوهاب،الرزاق،الفتاح،العليم،القابض،الباسط،الخافض،الرافع،المعز،المذل،السميع،البصير،الحكم،العدل،اللطيف،الخبير،الحليم،العظيم،الغفور،الشكور،العلي،الكبير،الحفيظ،المقيت،الحسيب،الجليل،الكريم،الرقيب،المجيب،الواسع،الحكيم،الودود،المجيد،الباعث،الشهيد،الحق،الوكيل،القوي،المتين،الولي،الحميد،المحصي،المبدئ،المعيد،المحيي،المميت،الحي،القيوم،الواجد،الماجد،الواحد،الأحد،الصمد،القادر،المقتدر،المقدم،المؤخر،الأول،الآخر،الظاهر،الباطن،الوالي،المتعالي،البر،التواب،المنتقم،العفو،الرؤوف،مالك الملك،ذو الجلال والإكرام،المقسط،الجامع،الغني،المغني،المانع،الضار،النافع،النور،الهادي،البديع،الباقي،الوارث،الرشيد،الصبور'.split('،');
 /* ===== التنقل ===== */
-const PG={quran:['القرآن الكريم','تلاوة بصوت القارئ'],azkar:['الأذكار','صباح ومساء'],hadith:['الأحاديث','٢٠ حديثًا موثقًا'],tasbeeh:['السبحة','عدّاد إلكتروني'],qibla:['القبلة','بوصلة الهاتف'],asma:['أسماء الله الحسنى','٩٩ اسمًا'],adhan:['الأذان','المؤذن والتنبيه']};
+const PG={mushaf:['المصحف','قراءة الآيات'],quran:['الاستماع للقرآن','تلاوة بصوت القارئ'],azkar:['الأذكار','صباح ومساء'],hadith:['الأحاديث','٢٠ حديثًا موثقًا'],tasbeeh:['السبحة','عدّاد إلكتروني'],qibla:['القبلة','بوصلة الهاتف'],asma:['أسماء الله الحسنى','٩٩ اسمًا'],adhan:['الأذان','المؤذن والتنبيه']};
 $('#tiles').innerHTML=Object.entries(PG).map(([k,v])=>`<button class="tile" onclick="go('${k}')">${v[0]}<small>${v[1]}</small></button>`).join('');
-function go(id){document.querySelectorAll('section').forEach(s=>s.hidden=s.id!=id);$('#back').hidden=id=='home';$('#ttl').textContent=id=='home'?'رفيقي':PG[id][0];if(id!='qibla')stopQ();scrollTo(0,0)}
+function go(id){document.querySelectorAll('section').forEach(s=>s.hidden=s.id!=id);$('#back').hidden=id=='home';$('#ttl').textContent=id=='home'?'رفيقي':PG[id][0];if(id!='qibla')stopQ();if(id=='mushaf')showMus();scrollTo(0,0)}
 /* ===== القرآن ===== */
 const au=$('#au');let cur=null;
 function fillRec(){$('#rec').innerHTML=RECS.map((r,i)=>`<option value="${i}">${r.n}</option>`).join('');$('#rec').value=Math.min(+LS.g('rec',0),RECS.length-1);fillSur()}
@@ -153,6 +159,20 @@ async function startQ(){try{if(window.DeviceOrientationEvent&&DeviceOrientationE
  addEventListener('deviceorientationabsolute',oh,true);addEventListener('deviceorientation',e=>{if(!e.absolute&&e.webkitCompassHeading==null)return;oh(e)},true);$('#qb').textContent='البوصلة تعمل'}
 function stopQ(){removeEventListener('deviceorientationabsolute',oh,true)}
 $('#qb').onclick=startQ;
+/* ===== المصحف (قراءة) ===== */
+let MS=null;
+async function getMus(){if(MS)return MS;for(const u of['quran.json','https://api.alquran.cloud/v1/quran/quran-uthmani']){try{const r=await fetch(u);MS=(await r.json()).data.surahs;if(MS&&MS.length==114)return MS}catch(e){}}MS=null;return null}
+$('#ms').innerHTML=SUR.map((n,i)=>`<option value="${i+1}">${i+1}. ${n}</option>`).join('');$('#ms').value=LS.g('ms',1);
+document.documentElement.style.setProperty('--fz',LS.g('fz',28)+'px');
+async function showMus(){const n=+$('#ms').value;LS.s('ms',n);const b=$('#mb');b.textContent='جارٍ التحميل...';const S=await getMus();
+ if(!S){b.innerHTML='<p class="c">تعذر تحميل نص المصحف. تأكد من الإنترنت وحاول مرة أخرى.</p>';return}
+ const sk=n!=1&&n!=9;let h=sk?'<p class="bsm">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>':'';
+ h+=S[n-1].ayahs.map((a,i)=>{let t=a.text;if(i==0&&sk)t=t.split(' ').slice(4).join(' ');return t+' <span class="an">﴿'+a.numberInSurah.toLocaleString('ar-EG')+'﴾</span>'}).join(' ');
+ b.innerHTML=h;scrollTo(0,0)}
+function ms2(d){const v=+$('#ms').value+d;if(v>=1&&v<=114){$('#ms').value=v;showMus()}}
+$('#ms').onchange=showMus;$('#mn').onclick=()=>ms2(1);$('#mp').onclick=()=>ms2(-1);
+function fz(d){const v=Math.min(48,Math.max(20,+LS.g('fz',28)+d));LS.s('fz',v);document.documentElement.style.setProperty('--fz',v+'px')}
+$('#fp').onclick=()=>fz(3);$('#fm').onclick=()=>fz(-3);
 /* ===== التشغيل ===== */
 tick();setInterval(tick,1000);setTimeout(schedule,1500);
 </script></body></html>
