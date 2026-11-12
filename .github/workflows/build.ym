@@ -21,11 +21,25 @@ jobs:
           mkdir -p www
           cp index.html www/
           cp adhan*.mp3 www/ 2>/dev/null || true
+          curl -sSfL https://api.alquran.cloud/v1/quran/quran-uthmani -o www/quran.json || echo "Quran text will load online instead"
       - run: npx cap add android
       - name: Copy adhan sounds for notifications
         run: |
           mkdir -p android/app/src/main/res/raw
           cp adhan*.mp3 android/app/src/main/res/raw/ 2>/dev/null || true
+      - name: Apply app icon
+        run: |
+          [ -f icon.png ] || exit 0
+          pip install pillow
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+          python3 - <<'PY'
+          from PIL import Image
+          im = Image.open('icon.png').convert('RGBA')
+          for d, s in {'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}.items():
+              r = im.resize((s, s), Image.LANCZOS)
+              for n in ('ic_launcher.png', 'ic_launcher_round.png'):
+                  r.save('android/app/src/main/res/mipmap-' + d + '/' + n)
+          PY
       - run: npx cap sync android
       - name: Build debug APK
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
