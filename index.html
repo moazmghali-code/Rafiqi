@@ -95,7 +95,7 @@ function calc(y,m,d){
  const dec=Math.asin(Math.sin(e*R)*Math.sin(L*R))/R;let eq=q/15-RA;if(eq>12)eq-=24;if(eq<-12)eq+=24;
  const nn=12+tz-LNG/15-eq,sl=Math.sin(LAT*R),cl=Math.cos(LAT*R),sd=Math.sin(dec*R),cd=Math.cos(dec*R);
  const ha=a=>Math.acos((-Math.sin(a*R)-sl*sd)/(cl*cd))/R/15;
- const A=-Math.atan(1/(1+Math.tan(Math.abs(LAT-dec)*R))),hA=Math.acos((Math.sin(A)-sl*sd)/(cl*cd))/R/15;
+ const A=Math.atan(1/(1+Math.tan(Math.abs(LAT-dec)*R))),hA=Math.acos((Math.sin(A)-sl*sd)/(cl*cd))/R/15;
  const mk=h=>new Date(Date.UTC(y,m,d)+(h-tz)*36e5);
  return{fajr:mk(nn-ha(19.5)),sunrise:mk(nn-ha(.833)),dhuhr:mk(nn),asr:mk(nn+hA),maghrib:mk(nn+ha(.833)),isha:mk(nn+ha(17.5))}}
 const day=i=>{const o=cp(new Date());return calc(o.year,o.month-1,o.day+i)};
