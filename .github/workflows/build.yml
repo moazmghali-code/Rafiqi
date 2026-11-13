@@ -24,6 +24,9 @@ jobs:
           curl -sSfL https://api.alquran.cloud/v1/quran/quran-uthmani -o www/quran.json || echo "online fallback"
           curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf -o www/quran.ttf || curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/amiriquran/AmiriQuran-Regular.ttf -o www/quran.ttf || echo "font not downloaded"
       - run: npx cap add android
+      - name: Exact alarm permission
+        run: |
+          sed -i 's#<application#<uses-permission android:name="android.permission.USE_EXACT_ALARM" />\n    <application#' android/app/src/main/AndroidManifest.xml
       - name: Copy adhan sounds
         run: |
           mkdir -p android/app/src/main/res/raw
@@ -36,6 +39,18 @@ jobs:
             python3 -c "from PIL import Image; im=Image.open('icon.png').convert('RGBA'); [im.resize((s,s)).save('android/app/src/main/res/mipmap-%s/%s' % (d,n)) for d,s in {'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}.items() for n in ('ic_launcher.png','ic_launcher_round.png')]"
           fi
       - run: npx cap sync android
+      - name: Sign with fixed key
+        env:
+          KS_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" android/app/build.gradle
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > /home/runner/rafiqi.p12
+            sed -i 's#^android {#android {\n    signingConfigs {\n        release {\n            storeFile file("/home/runner/rafiqi.p12")\n            storePassword "rafiqi123"\n            keyAlias "rafiqi"\n            keyPassword "rafiqi123"\n            storeType "pkcs12"\n        }\n    }#' android/app/build.gradle
+            sed -i 's#buildTypes {#buildTypes {\n        debug {\n            signingConfig signingConfigs.release\n        }#' android/app/build.gradle
+          else
+            echo "No signing secret, using default debug key"
+          fi
       - name: Build debug APK
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
