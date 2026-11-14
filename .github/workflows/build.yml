@@ -23,6 +23,10 @@ jobs:
           cp adhan*.mp3 www/ 2>/dev/null || true
           curl -sSfL https://api.alquran.cloud/v1/quran/quran-uthmani -o www/quran.json || echo "online fallback"
           curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf -o www/quran.ttf || curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/amiriquran/AmiriQuran-Regular.ttf -o www/quran.ttf || echo "font not downloaded"
+          curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/arefruqaa/ArefRuqaa-Bold.ttf -o www/ruqaa.ttf || curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/arefruqaa/ArefRuqaa-Regular.ttf -o www/ruqaa.ttf || echo "ruqaa font not downloaded"
+          curl -sSfL https://api.alquran.cloud/v1/quran/ar.muyassar -o www/tafsir_muyassar.json || echo "no muyassar"
+          curl -sSfL https://api.alquran.cloud/v1/quran/ar.jalalayn -o www/tafsir_jalalayn.json || echo "no jalalayn"
+          cp icon.png www/splash.png 2>/dev/null || true
       - run: npx cap add android
       - name: Exact alarm permission
         run: |
