@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,7 +24,37 @@ jobs:
           cp index.html www/
           cp adhan*.mp3 www/ 2>/dev/null || true
           curl -sSfL https://api.alquran.cloud/v1/quran/quran-uthmani -o www/quran.json || echo "online fallback"
-          curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf -o www/quran.ttf || curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/amiriquran/AmiriQuran-Regular.ttf -o www/quran.ttf || echo "font not downloaded"
+          curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/amiriquran/AmiriQuran-Regular.ttf -o www/quran_amiri.ttf || echo "amiri quran not downloaded"
+          cp www/quran_amiri.ttf www/quran.ttf 2>/dev/null || true
+          curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf -o www/quran_sch.ttf || echo "scheherazade not downloaded"
+          curl -sSfL https://api.alquran.cloud/v1/quran/quran-simple -o www/quran_simple.json || echo "no simple text"
+          cp quran_user.* www/ 2>/dev/null || true
+          curl -sSfL https://quranenc.com/downloads/assets/Hafs_20.zip -o hafs.zip && unzip -o -q hafs.zip -d hafs || echo "hafs zip failed"
+          python3 - <<'PY'
+          import csv,json,glob,shutil
+          try:
+              ttf=glob.glob('hafs/**/*.ttf',recursive=True)
+              cs=glob.glob('hafs/**/*.csv',recursive=True)
+              d=json.load(open('www/quran.json',encoding='utf-8'))
+              m={}
+              for r in csv.DictReader(open(cs[0],encoding='utf-8-sig')):
+                  r={k.strip().strip('"'):v for k,v in r.items()}
+                  m[(int(r['sura']),int(r['aya']))]=r['uthmani'].strip()
+              assert len(m)==6236 and ttf
+              bs=m[(1,1)]
+              for s in d['data']['surahs']:
+                  for a in s['ayahs']:
+                      t=m[(s['number'],a['numberInSurah'])]
+                      if a['numberInSurah']==1 and s['number'] not in (1,9):
+                          t=bs+' '+t
+                      a['text']=t
+              d['src']='مجمع الملك فهد (خط وبيانات Hafs v20) عبر QuranEnc.com'
+              json.dump(d,open('www/quran.json','w',encoding='utf-8'),ensure_ascii=False)
+              shutil.copy(ttf[0],'www/quran.ttf')
+              print('hafs merged')
+          except Exception as e:
+              print('hafs merge skipped:',e)
+          PY
           curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/arefruqaa/ArefRuqaa-Bold.ttf -o www/ruqaa.ttf || curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/arefruqaa/ArefRuqaa-Regular.ttf -o www/ruqaa.ttf || echo "ruqaa font not downloaded"
           curl -sSfL https://api.alquran.cloud/v1/quran/ar.muyassar -o www/tafsir_muyassar.json || echo "no muyassar"
           curl -sSfL https://api.alquran.cloud/v1/quran/ar.jalalayn -o www/tafsir_jalalayn.json || echo "no jalalayn"
@@ -69,3 +101,10 @@ jobs:
         with:
           name: rafiqi-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish release
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk rafiqi.apk
+          gh release create "v${{ github.run_number }}" rafiqi.apk --title "رفيقي v${{ github.run_number }}" --notes "تطبيق رفيقي - رفيقك في طريق الخير" --latest
