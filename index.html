@@ -52,6 +52,8 @@ textarea{width:100%;font:inherit;color:var(--g2);background:var(--bg);border:1px
 .rf{display:inline-block;margin:4px;padding:6px 12px;border:1px solid var(--g);border-radius:12px;color:var(--g);font-size:15px}
 #cdv{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:55;display:flex;align-items:center;justify-content:center;padding:20px}#cdv>div{background:var(--bg);border:2px solid var(--g);border-radius:20px;padding:18px;max-width:420px;width:100%;max-height:80vh;overflow:auto;text-align:center}
 .qf{font-family:QF,"Amiri","Noto Naskh Arabic","Droid Arabic Naskh",serif}
+input[type=number]{font:inherit;color:var(--g2);background:var(--bg);border:1px solid var(--l);border-radius:10px;padding:6px}
+.tr{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--l);border-radius:14px;margin:8px 0;background:var(--s)}.tr i{font-style:normal;min-width:34px;height:34px;border:1px solid var(--d);border-radius:50%;display:grid;place-items:center;color:var(--d);font-size:15px}.tr p{margin:0;flex:1;line-height:2;font-size:var(--az,21px)}.tr small{color:var(--d)}.tr.ok{border-color:#2e9d5b;background:rgba(46,157,91,.12)}.tr.ok i,.tr.ok small{border-color:#2e9d5b;color:#2e9d5b}.tr.cur{border-color:var(--g);box-shadow:0 0 0 1px var(--g)}
 </style></head><body>
 <header><button id="back" hidden onclick="go('home')">رجوع</button><h1 id="ttl">رفيقي</h1><small>رفيقك في طريق الخير</small></header>
 <main>
@@ -90,6 +92,19 @@ textarea{width:100%;font:inherit;color:var(--g2);background:var(--bg);border:1px
 <section id="stories" hidden>
  <div id="stl"></div>
  <div id="str" hidden><div class="c"><button id="stb">القصص</button></div><div class="card" id="stc"></div></div>
+</section>
+<section id="tartil" hidden>
+ <div class="card">
+  <small>السورة:</small><select id="t_s"></select>
+  <small>ابدأ من الآية رقم:</small> <input type="number" id="t_f" min="1" value="1" style="width:90px"><br>
+  <label><input type="checkbox" id="t_h"> إخفاء الآيات (اختبار الحفظ)</label><br>
+  <small>لغة التعرّف على الكلام:</small><select id="t_l"><option value="ar-SA">العربية (السعودية)</option><option value="ar-EG">العربية (مصر)</option></select>
+  <small>الصرامة:</small><select id="t_x"><option value="m">متوسطة (تسمح بخطأ كلمة واحدة في الآيات الطويلة)</option><option value="s">صارمة (كل الكلمات)</option></select>
+ </div>
+ <div class="c"><button class="p" id="t_go">ابدأ التسميع</button><button id="t_hint">تلميح</button><button id="t_skip">تخطي</button></div>
+ <p class="c" id="t_st"></p><p class="c" id="t_cnt" style="color:var(--g)"></p><p class="c"><small id="t_hr"></small></p>
+ <div id="t_list"></div>
+ <p class="c"><small>التقييم تقريبي: يعتمد على التعرّف الآلي على الكلام، فقد يخطئ أحيانًا، ولا يصحّح أحكام التجويد، ولا يغني عن عرض تلاوتك على معلّم متقن.</small></p>
 </section>
 <section id="adhan" hidden>
  <div class="sec">المظهر</div>
@@ -248,9 +263,9 @@ const HD=[['إنما الأعمال بالنيات، وإنما لكل امرئ 
 const AZ=[['{{2:255}}',1],['{{112:1-4}}',3],['{{113:1-5}}',3],['{{114:1-6}}',3],[['أصبحنا وأصبح الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير. ربّ أسألك خير ما في هذا اليوم وخير ما بعده، وأعوذ بك من شرّ ما في هذا اليوم وشرّ ما بعده.','أمسينا وأمسى الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير. ربّ أسألك خير ما في هذه الليلة وخير ما بعدها، وأعوذ بك من شرّ ما في هذه الليلة وشرّ ما بعدها.'],1],[['اللهم بك أصبحنا، وبك أمسينا، وبك نحيا، وبك نموت، وإليك النشور.','اللهم بك أمسينا، وبك أصبحنا، وبك نحيا، وبك نموت، وإليك المصير.'],1],['اللهم أنت ربي لا إله إلا أنت، خلقتني وأنا عبدك، وأنا على عهدك ووعدك ما استطعت، أعوذ بك من شرّ ما صنعت، أبوء لك بنعمتك عليّ، وأبوء بذنبي فاغفر لي فإنه لا يغفر الذنوب إلا أنت. (سيد الاستغفار)',1],['بسم الله الذي لا يضرّ مع اسمه شيء في الأرض ولا في السماء وهو السميع العليم.',3],['رضيت بالله ربًّا، وبالإسلام دينًا، وبمحمد صلى الله عليه وسلم نبيًّا.',3],['حسبيَ الله لا إله إلا هو، عليه توكلت وهو ربّ العرش العظيم.',7],['أعوذ بكلمات الله التامات من شرّ ما خلق.',3],['سبحان الله وبحمده.',100]];
 const ASMA='الرحمن،الرحيم،الملك،القدوس،السلام،المؤمن،المهيمن،العزيز،الجبار،المتكبر،الخالق،البارئ،المصور،الغفار،القهار،الوهاب،الرزاق،الفتاح،العليم،القابض،الباسط،الخافض،الرافع،المعز،المذل،السميع،البصير،الحكم،العدل،اللطيف،الخبير،الحليم،العظيم،الغفور،الشكور،العلي،الكبير،الحفيظ،المقيت،الحسيب،الجليل،الكريم،الرقيب،المجيب،الواسع،الحكيم،الودود،المجيد،الباعث،الشهيد،الحق،الوكيل،القوي،المتين،الولي،الحميد،المحصي،المبدئ،المعيد،المحيي،المميت،الحي،القيوم،الواجد،الماجد،الواحد،الأحد،الصمد،القادر،المقتدر،المقدم،المؤخر،الأول،الآخر،الظاهر،الباطن،الوالي،المتعالي،البر،التواب،المنتقم،العفو،الرؤوف،مالك الملك،ذو الجلال والإكرام،المقسط،الجامع،الغني،المغني،المانع،الضار،النافع،النور،الهادي،البديع،الباقي،الوارث،الرشيد،الصبور'.split('،');
 /* ===== التنقل ===== */
-const PG={mushaf:['المصحف','قراءة الآيات'],wird:['ورد اليوم','صفحة يومية من المصحف'],stories:['قصص الأنبياء','تسعة من الأنبياء ومعجزاتهم'],quran:['الاستماع للقرآن','تلاوة بصوت القارئ'],azkar:['الأذكار','صباح ومساء'],hadith:['الأحاديث','٢٠ حديثًا موثقًا'],tasbeeh:['السبحة','عدّاد إلكتروني'],qibla:['القبلة','بوصلة الهاتف'],asma:['أسماء الله الحسنى','٩٩ اسمًا'],adhan:['الإعدادات','الأذان وعن التطبيق']};
+const PG={mushaf:['المصحف','قراءة الآيات'],wird:['ورد اليوم','صفحة يومية من المصحف'],stories:['قصص الأنبياء','تسعة من الأنبياء ومعجزاتهم'],tartil:['الترتيل والتسميع','اختبر تلاوتك وحفظك'],quran:['الاستماع للقرآن','تلاوة بصوت القارئ'],azkar:['الأذكار','صباح ومساء'],hadith:['الأحاديث','٢٠ حديثًا موثقًا'],tasbeeh:['السبحة','عدّاد إلكتروني'],qibla:['القبلة','بوصلة الهاتف'],asma:['أسماء الله الحسنى','٩٩ اسمًا'],adhan:['الإعدادات','الأذان وعن التطبيق']};
 const NAV=['home','mushaf','azkar','tasbeeh','adhan'],NAVT={home:'الرئيسية',mushaf:'القرآن',azkar:'الأذكار',tasbeeh:'السبحة',adhan:'الإعدادات'};$('#tiles').innerHTML=Object.entries(PG).filter(([k])=>!NAV.includes(k)).map(([k,v])=>`<button class="tile" onclick="go('${k}')">${v[0]}<small>${v[1]}</small></button>`).join('');
-function go(id){wake(false);document.querySelectorAll('section').forEach(s=>s.hidden=s.id!=id);$('#back').hidden=NAV.includes(id);document.querySelectorAll('#bn button').forEach(b=>b.classList.toggle('on',b.dataset.g==id));$('#ttl').textContent=id=='home'?'رفيقي':PG[id][0];if(id!='qibla')stopQ();if(id=='mushaf'){$('#ml').hidden=false;$('#mr').hidden=true;renderL();renderBk();getMus().then(renderL)}if(id=='azkar'){$('#azg').hidden=false;$('#azv').hidden=true}if(id=='stories'){$('#stl').hidden=false;$('#str').hidden=true}if(id=='home')renderBk();if(id=='wird'){wv=wp;wirdShow()}scrollTo(0,0)}
+function go(id){wake(false);if(tOn&&id!='tartil')tStop();document.querySelectorAll('section').forEach(s=>s.hidden=s.id!=id);$('#back').hidden=NAV.includes(id);document.querySelectorAll('#bn button').forEach(b=>b.classList.toggle('on',b.dataset.g==id));$('#ttl').textContent=id=='home'?'رفيقي':PG[id][0];if(id!='qibla')stopQ();if(id=='mushaf'){$('#ml').hidden=false;$('#mr').hidden=true;renderL();renderBk();getMus().then(renderL)}if(id=='azkar'){$('#azg').hidden=false;$('#azv').hidden=true}if(id=='stories'){$('#stl').hidden=false;$('#str').hidden=true}if(id=='home')renderBk();if(id=='tartil')tInit();if(id=='wird'){wv=wp;wirdShow()}scrollTo(0,0)}
 /* ===== القرآن ===== */
 const au=$('#au');let cur=null;
 function fillRec(){$('#rec').innerHTML=RECS.map((r,i)=>`<option value="${i}">${r.n}</option>`).join('');$('#rec').value=Math.min(+LS.g('rec',0),RECS.length-1);fillSur()}
@@ -474,6 +489,45 @@ async function openSt(i){await getMus();const s=ST[i];$('#stl').hidden=true;$('#
 $('#stb').onclick=()=>{$('#stl').hidden=false;$('#str').hidden=true;scrollTo(0,0)};renderSt();
 let cdG=null;function showCard(t,b,s,g){cdG=g;$('#cdt').textContent=t;$('#cdb').textContent=b;$('#cds').textContent=s||'';$('#cdv').hidden=false}
 $('#cdc').onclick=()=>$('#cdv').hidden=true;$('#cdo').onclick=()=>{$('#cdv').hidden=true;if(cdG)go(cdG)};
+/* ===== الترتيل والتسميع ===== */
+var tOn=false;
+let tL=[],tE=[],tOk=new Set(),tSk=new Set(),tEi=0,tC0=0,tF=0,tSur=1,tHn=-1,tFail=0,tGot=false,tIn=false,tHeard='';
+const nt=s=>nzM(s||'').n.replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/[^\u0621-\u064A ]/g,' ').replace(/\s+/g,' ').trim();
+function wsim(a,b){if(a==b)return 1;const m=a.length,n=b.length;if(!m||!n)return 0;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]==b[j-1]?0:1));p=c}return 1-p[n]/Math.max(m,n)}
+function ayScore(E,R,th){let ri=0,hits=0;for(const e of E){let best=-1,bs=0;for(let k=ri;k<Math.min(R.length,ri+3);k++){const s=wsim(e,R[k]);if(s>bs){bs=s;best=k}}if(bs>=th){hits++;ri=best+1}}return{hits,end:ri}}
+const SRP=()=>window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.SpeechRecognition;
+function tMsg(t,c){const e=$('#t_st');e.textContent=t;e.style.color=c||''}
+async function tInit(){if(!tIn){$('#t_s').innerHTML=SUR.map((n,i)=>`<option value="${i+1}">${i+1}. ${n}</option>`).join('');$('#t_s').value=SGet('t_s',1);$('#t_l').value=SGet('t_l','ar-SA');$('#t_x').value=SGet('t_x','s');$('#t_h').checked=SGet('t_h','0')=='1';
+  $('#t_s').onchange=()=>{SSet('t_s',$('#t_s').value);$('#t_f').value=1;tLoad()};$('#t_f').onchange=tLoad;$('#t_h').onchange=()=>{SSet('t_h',$('#t_h').checked?1:0);tRender()};$('#t_l').onchange=()=>SSet('t_l',$('#t_l').value);$('#t_x').onchange=()=>SSet('t_x',$('#t_x').value);
+  $('#t_go').onclick=()=>tOn?tStop():tStart();$('#t_hint').onclick=()=>{tHn=tEi;tRender()};$('#t_skip').onclick=()=>{if(tEi<tL.length){tSk.add(tEi);tEi++;tC0=tEi;tHn=-1;tRender()}};tIn=true}
+ await getMus();tLoad()}
+function tLoad(){tStop();if(!MS)return;tSur=+$('#t_s').value;const sk=tSur!=1&&tSur!=9;
+ tL=MS[tSur-1].ayahs.map((a,i)=>{let t=a.text;if(i==0&&sk)t=t.split(' ').slice(4).join(' ');return t});tE=tL.map(t=>nt(t).split(' ').filter(Boolean));
+ tOk=new Set();tSk=new Set();tEi=Math.max(0,Math.min(tL.length-1,(+$('#t_f').value||1)-1));tF=tEi;tC0=tEi;tHn=-1;$('#t_hr').textContent='';
+ tMsg('اضغط «ابدأ التسميع» ثم اتلُ من الآية رقم '+(tEi+1).toLocaleString('ar-EG'));tRender()}
+function tRender(){const hid=$('#t_h').checked;
+ $('#t_list').innerHTML=tL.map((t,i)=>{if(i<tF)return'';const ok=tOk.has(i),sk=tSk.has(i),cur=i==tEi&&!ok;let b;if(ok||sk||!hid)b=t;else if(i==tHn)b=t.split(' ').slice(0,2).join(' ')+' …';else b='<span style="opacity:.4">••• ••• •••</span>';
+  return`<div class="tr${ok?' ok':''}${cur?' cur':''}" id="tr${i}"><i>${(i+1).toLocaleString('ar-EG')}</i><p class="qf">${b}</p><small>${ok?'صحيح':sk?'تم تخطيها':''}</small></div>`}).join('');
+ $('#t_cnt').textContent='صحيح: '+tOk.size.toLocaleString('ar-EG')+' من '+(tL.length-tF).toLocaleString('ar-EG');
+ const c=document.getElementById('tr'+tEi);if(c&&tOn)c.scrollIntoView({block:'center',behavior:'smooth'})}
+function feed(ms){if(!tL.length||!ms||!ms.length)return;tHeard=ms[0];$('#t_hr').textContent='سمعتُ: '+tHeard;const strict=SGet('t_x','s')=='s';let best=tEi;
+ for(const m of ms){let R=nt(m).split(' ').filter(Boolean),idx=tC0;
+  if(idx==0&&tSur!=1&&tSur!=9&&R.length>=4&&wsim(R.slice(0,4).join(' '),'بسم الله الرحمن الرحيم')>=.75)R=R.slice(4);
+  while(idx<tL.length){const E=tE[idx];if(!E.length){idx++;continue}const r=ayScore(E,R,strict?.9:.8),need=(strict||E.length<8)?E.length:E.length-1;if(r.hits>=need){R=R.slice(r.end);idx++}else break}
+  if(idx>best)best=idx}
+ if(best>tEi){for(let i=tEi;i<best;i++)tOk.add(i);tEi=best;tHn=-1;navigator.vibrate&&navigator.vibrate(40);
+  if(tEi>=tL.length){tRender();tMsg('ما شاء الله، أتممت السورة.','#2e9d5b');tStop();return}
+  tMsg('صحيح، أحسنت! تابع الآية رقم '+(tEi+1).toLocaleString('ar-EG'),'#2e9d5b');tRender()}}
+async function tStart(){const sr=SRP();if(!sr){tMsg('هذه الميزة تعمل داخل التطبيق المثبَّت على الهاتف فقط.','#e8a33d');return}
+ try{const p=await sr.requestPermissions();if(p.speechRecognition!=='granted'){tMsg('اسمح للتطبيق باستخدام الميكروفون من إعدادات الهاتف.','#e8a33d');return}
+  await sr.removeAllListeners();
+  sr.addListener('partialResults',d=>{tGot=true;feed(d.matches||[])});
+  sr.addListener('listeningState',d=>{if(d.status=='stopped'&&tOn){if(tGot){tFail=0;if(tEi==tC0)$('#t_hr').textContent='سمعتُ: '+tHeard+' — لم تُطابق الآية المتوقعة'}else tFail++;
+   if(tFail>5){tStop();tMsg('توقّف الاستماع. تأكد من الميكروفون والاتصال ثم ابدأ مجددًا.','#e8a33d')}else setTimeout(tCycle,350)}});
+  tOn=true;tFail=0;$('#t_go').textContent='إيقاف';wake(true);tCycle()}catch(e){tMsg('تعذر بدء الاستماع: '+e,'#e8a33d')}}
+async function tCycle(){if(!tOn)return;tC0=tEi;tGot=false;tMsg('أنصت إليك… اتلُ الآية رقم '+(tEi+1).toLocaleString('ar-EG'));
+ try{await SRP().start({language:$('#t_l').value,maxResults:5,partialResults:true,popup:false})}catch(e){if(++tFail>3){tStop();tMsg('تعذر الاستماع: '+e,'#e8a33d')}}}
+function tStop(){tOn=false;const g=$('#t_go');if(g)g.textContent='ابدأ التسميع';wake(false);const sr=SRP();if(sr){try{sr.stop();sr.removeAllListeners()}catch(e){}}}
 /* ===== الإعدادات ===== */
 const PGC=[['#f7f0dc','#1b1407','#ecdcaa','#4a2f04','#6b4a0b','#1d6a3a'],['#ffffff','#111111','#eeeeee','#333333','#555555','#1d6a3a'],['#e4eefa','#10223a','#cfe0f3','#1b3a5e','#3a5878','#1b5e9e'],['#e6f1e0','#16301a','#d1e5c8','#25502b','#3c6b42','#1d6a3a'],['#16130c','#e8d49a','#2a2210','#e8d49a','#a58f50','#c9a24b']];
 function applyUI(){const r=document.documentElement,c=PGC[+SGet('pg',0)]||PGC[0];r.dataset.th=SGet('th','dark');['--pg','--pt','--ps','--pst','--pd','--mk'].forEach((v,i)=>r.style.setProperty(v,c[i]));r.style.setProperty('--fz',LS.g('fz',24)+'px');r.style.setProperty('--az',SGet('az',21)+'px');$('#dim').style.opacity=SGet('dim',0)/100;document.querySelectorAll('.cols,.mus').forEach(x=>x.classList.toggle('j',SGet('jf','1')=='1'))}
