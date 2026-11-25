@@ -28,6 +28,7 @@ jobs:
           cp www/quran_amiri.ttf www/quran.ttf 2>/dev/null || true
           curl -sSfL https://raw.githubusercontent.com/google/fonts/main/ofl/scheherazadenew/ScheherazadeNew-Regular.ttf -o www/quran_sch.ttf || echo "scheherazade not downloaded"
           curl -sSfL https://api.alquran.cloud/v1/quran/quran-simple -o www/quran_simple.json || echo "no simple text"
+          curl -sSfL https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-nawawi.min.json -o www/nawawi.json || curl -sSfL https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/ara-nawawi.json -o www/nawawi.json || echo "no nawawi"
           cp quran_user.* www/ 2>/dev/null || true
           curl -sSfL https://quranenc.com/downloads/assets/Hafs_20.zip -o hafs.zip && unzip -o -q hafs.zip -d hafs || echo "hafs zip failed"
           python3 - <<'PY'
